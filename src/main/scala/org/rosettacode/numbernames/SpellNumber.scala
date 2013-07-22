@@ -47,22 +47,26 @@ object SpellNumber extends App {
     }
 
     // 234 becomes "two hundred [and] thirty-four"
-    def tripletGroup(nnn: String, isLSDgroup: Boolean, s: String): String = {
-      if (nnn != "000") {
-        val eval = (nnn.par.map(_.toString.toInt).reverse zip ParSeq('units, 'tens, 'hundreds)).reverse
+    def tripletGroup(nnn: String, isLSDgroup: Boolean, strE3: String): String = {
+      nnn match { // Rare exceptions confirm the rule
+        case "000" => "" //
+        case "100" => hundredString + strE3
+        case _ => {
+          val eval = (nnn.par.map(_.toString.toInt).reverse zip ParSeq('units, 'tens, 'hundreds)).reverse
 
-        eval.map {
-          case (d, 'units) if eval.seq.contains((1, 'tens)) => onesAndTeens(d + 10)
-          case (d, 'units) if (isLSDgroup && nnn == "0") => zeroString
-          case (d, 'units) => onesAndTeens(d)
-          case (d, 'hundreds) if d > 0 => onesAndTeens(d) + hundredString + condAndString
-          case (d, 'tens) if d > 1 && eval.seq.contains((0, 'units)) => tens(d)
-          case (d, 'tens) if d > 1 => tens(d) +
-            ( /*if (isLSDgroup) discutable*/ condHyphenString /* else " " */ )
-          case _ => ""
-        }.mkString + s
-      } else ""
-    }
+          eval.map {
+            case (d, 'units) if eval.seq.contains((1, 'tens)) => onesAndTeens(d + 10)
+            case (d, 'units) if (isLSDgroup && nnn == "0") => zeroString
+            case (d, 'units) => onesAndTeens(d)
+            case (d, 'hundreds) if d > 0 => onesAndTeens(d) + hundredString + condAndString
+            case (d, 'tens) if d > 1 && eval.seq.contains((0, 'units)) => tens(d)
+            case (d, 'tens) if d > 1 => tens(d) +
+              ( /*if (isLSDgroup) discutable*/ condHyphenString /* else " " */ )
+            case _ => ""
+          }.mkString + strE3
+        }
+      }
+    } // def tripletGroup(…
 
     def compose(n: BigInt): String = {
       // "1234" becomes List((1,"thousand"), (234, ""))
@@ -70,9 +74,8 @@ object SpellNumber extends App {
         .zip(powersOfThousands) //						// Name the powers of Thousands
         .reverse //										// Put it back to most-significant first
 
-      if (decGroups.size < 24) // Detect overflow trap
-      // Send per group sections to composeScale
-      {
+      if (decGroups.size < 24) // Detect overflow trap      
+      { // Send per group sections to composeScale
         @tailrec
         def iter(elems: Seq[(String, String)], acc: String): String = {
           elems match {
@@ -82,12 +85,11 @@ object SpellNumber extends App {
             case _ => acc
           }
         }
-
         iter(decGroups.toList, "").mkString.trim
       } else "###.overflow.###"
-    } // def compose(â€¦
+    } // def compose(…
 
-    // Here starts def longhand(â€¦
+    // Here starts def longhand(…
     if (v < 0) "minus " + compose(-v) else compose(v)
   }
 
@@ -96,7 +98,7 @@ object SpellNumber extends App {
     def testVal1 = BigInt("1" * 69)
     def testVal9 = BigInt(10).pow(69) - 1
 
-    @tailrec // Series generator of 9, 98, 987, 9876 â€¦
+    @tailrec // Series generator of 9, 98, 987, 9876 …
     def inner(counter: Int, elem: BigInt, testList: ParSeq[BigInt]): ParSeq[BigInt] = {
       if (counter < 20)
         inner(counter + 1, elem * 10 + (9 - (counter % 10)), testList ++ ParSeq(elem))
