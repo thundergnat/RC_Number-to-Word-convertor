@@ -34,11 +34,9 @@ object SpellNumber extends App {
 
     val tens = (Array[String]("", "") ++ ("twen thir for fif six seven eigh nine".split(' ')).
       map(_ + "ty")).par
-
-    def hundredString = "hundred "
-    def condAndString = if (showAnd) "and " else ""
-    def condHyphenString = if (showHyphen) "-" else " "
-
+    val hundredString = "hundred "
+    val condAndString = if (showAnd) "and " else ""
+    val condHyphenString = if (showHyphen) "-" else " "
     val powersOfThousands = {
       val p1 = "m b tr quadr quint sext sept oct non dec".split(' ').map(_ + "illion ").par
       val p2 = "un duo tre quattuor quin sex septen octo novem ".split(' ').map(_ + "decillion ").par
@@ -60,13 +58,12 @@ object SpellNumber extends App {
             case (d, 'units) => onesAndTeens(d)
             case (d, 'hundreds) if d > 0 => onesAndTeens(d) + hundredString + condAndString
             case (d, 'tens) if d > 1 && eval.seq.contains((0, 'units)) => tens(d)
-            case (d, 'tens) if d > 1 => tens(d) +
-              ( /*if (isLSDgroup) discutable*/ condHyphenString /* else " " */ )
+            case (d, 'tens) if d > 1 => tens(d) + condHyphenString
             case _ => ""
           }.mkString + strE3
         }
       }
-    } // def tripletGroup(…
+    } // def tripletGroup(ï¿½
 
     def compose(n: BigInt): String = {
       // "1234" becomes List((1,"thousand"), (234, ""))
@@ -87,9 +84,9 @@ object SpellNumber extends App {
         }
         iter(decGroups.toList, "").mkString.trim
       } else "###.overflow.###"
-    } // def compose(…
+    } // def compose(ï¿½
 
-    // Here starts def longhand(…
+    // Here starts def longhand(ï¿½
     if (v < 0) "minus " + compose(-v) else compose(v)
   }
 
@@ -98,7 +95,7 @@ object SpellNumber extends App {
     def testVal1 = BigInt("1" * 69)
     def testVal9 = BigInt(10).pow(69) - 1
 
-    @tailrec // Series generator of 9, 98, 987, 9876 …
+    @tailrec // Series generator of 9, 98, 987, 9876 ï¿½
     def inner(counter: Int, elem: BigInt, testList: ParSeq[BigInt]): ParSeq[BigInt] = {
       if (counter < 20)
         inner(counter + 1, elem * 10 + (9 - (counter % 10)), testList ++ ParSeq(elem))
