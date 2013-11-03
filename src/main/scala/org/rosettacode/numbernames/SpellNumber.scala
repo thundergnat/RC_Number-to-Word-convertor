@@ -4,7 +4,7 @@ package numbernames
 import scala.annotation.tailrec
 import scala.collection.parallel.ParSeq
 
-/** Spells a English numeral longhand. The numbers are expressed using words.
+/** Spells an English numeral longhand. The numbers are expressed using words.
  *
  *  The implementation goes up to 10<sup>69</sup>-1 and also supports negative and zero inputs.
  *
@@ -18,11 +18,11 @@ trait LongHand {
    *  @param showAnd		flag the output extra and in output, default off
    *  @param zeroString		the word for 0, default to "zero"
    *  @param showHyphen		hyphenate all compound numbers e.g. twenty-four, default is on
-   *  @return				the numeric value in words
+   *  @return				the numeric value expressed in words
    */
   def longhand(numeral: BigInt,
-               zeroString: String = "zero",
                showAnd: Boolean = false,
+               zeroString: String = "zero",
                showHyphen: Boolean = true): String = {
 
     val condAndString = if (showAnd) "and " else ""
@@ -52,11 +52,8 @@ trait LongHand {
     def compose(n: BigInt): String = {
       // "1234" becomes List((1,"thousand"), (234, ""))
       val decGroups = n.toString.reverse.grouped(3).map(_.reverse).toSeq.par // Group into powers of thousands
-        .zip(shortScale) //													// Name the powers of Thousands
-        .reverse //      													// Put it back to most-significant first
-
-      if (decGroups.size < 24) // Detect overflow trap      
-      { // Send per group sections to composeScale
+      if (decGroups.size <= shortScale.size) // Detect overflow  
+      { // Send per group section to composeScale
         @tailrec
         def iter(elems: Seq[(String, String)], acc: String): String = {
           elems match {
@@ -65,8 +62,8 @@ trait LongHand {
             }
             case _ => acc
           }
-        }
-        iter(decGroups.toList, "").mkString.trim
+        } // Group of decimals are accompanied with the short scale name.
+        iter(decGroups.zip(shortScale).reverse.toList, "").mkString.trim
       } else "###.overflow.###"
     } // def compose(…
 
@@ -75,9 +72,9 @@ trait LongHand {
   } // End def longhand(… @ 91 lines
 
   val onesAndTeens = {
-    def lowNumerals = "one two three four five six seven eight nine ten eleven twelve".split(' ').map(_ + " ")
-    def tenties = "thir four fif six seven eigh nine".split(' ').map(_ + "teen ")
-    ParSeq("") ++ lowNumerals ++ tenties
+    def one_12 = "one two three four five six seven eight nine ten eleven twelve".split(' ').map(_ + " ").par
+    def teens = "thir four fif six seven eigh nine".split(' ').map(_ + "teen ").par
+    ParSeq("") ++ one_12 ++ teens
   }
 
   val tens = (Array[String]("", "") ++ ("twen thir for fif six seven eigh nine".split(' ')).
@@ -86,7 +83,7 @@ trait LongHand {
   lazy val shortScale = {
     def p1 = "m b tr quadr quint sext sept oct non dec".split(' ').map(_ + "illion ").par
     def p2 = "un duo tre quattuor quin sex septen octo novem ".split(' ').map(_ + "decillion ").par
-    def p3 = ("vigint cent".split(' ').map(_ + "illion ") :+ "overflow trap").par
+    def p3 = "vigint cent".split(' ').map(_ + "illion ").par
     ParSeq("", "thousand ") ++ p1 ++ p2 ++ p3
   }
 } // trait LongHand
